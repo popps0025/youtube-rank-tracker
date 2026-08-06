@@ -2,33 +2,50 @@
  "meta": {},
  "records": {
   "2026-08-06": {
-   "눈성형": {
-    "r": null,
-    "s": "beyond"
-   },
-   "쌍꺼풀수술": {
-    "r": null,
-    "s": "beyond"
-   },
-   "눈매교정": {
-    "r": null,
-    "s": "beyond"
-   },
-   "눈재수술": {
-    "r": null,
-    "s": "beyond"
-   },
    "자연유착": {
-    "r": 41,
+    "r": 30,
     "s": "ok"
    },
-   "절개쌍꺼풀": {
+   "12홀자연유착": {
+    "r": 1,
+    "s": "ok"
+   },
+   "12홀": {
+    "r": 29,
+    "s": "ok"
+   },
+   "절개법": {
     "r": null,
     "s": "beyond"
    },
    "매몰법": {
     "r": null,
     "s": "beyond"
+   },
+   "세미아웃": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "세미아웃라인": {
+    "r": 8,
+    "s": "ok"
+   },
+   "인아웃": {
+    "r": null,
+    "s": "beyond"
+   },
+   "인아웃라인": {
+    "r": 22,
+    "s": "ok"
+   },
+   "인라인": {
+    "r": null,
+    "s": "beyond"
+   },
+   "아웃라인": {
+    "r": 38,
+    "s": "ok"
    },
    "앞트임": {
     "r": null,
@@ -42,169 +59,133 @@
     "r": null,
     "s": "beyond"
    },
-   "트임복원": {
+   "위트임": {
     "r": null,
     "s": "beyond"
    },
-   "눈밑지방재배치": {
+   "눈수술": {
     "r": null,
     "s": "beyond"
+   },
+   "눈성형": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "눈매교정": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "상안검": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "하안검": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "눈썹하거상": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "코성형": {
+   "눈밑지방재배치": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "복코": {
+   "재수술": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "코재수술": {
+   "쌍꺼풀재수술": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "비개방코성형": {
+   "쌍수후붓기": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "개방코성형": {
+   "리프팅": {
     "r": null,
-    "s": "beyond"
-   },
-   "콧볼축소": {
-    "r": null,
-    "s": "beyond"
-   },
-   "비중격연장술": {
-    "r": null,
-    "s": "beyond"
-   },
-   "코끝성형": {
-    "r": null,
-    "s": "beyond"
-   },
-   "매부리코": {
-    "r": null,
-    "s": "beyond"
-   },
-   "긴코": {
-    "r": null,
-    "s": "beyond"
-   },
-   "들창코": {
-    "r": null,
-    "s": "beyond"
-   },
-   "화살코": {
-    "r": null,
-    "s": "beyond"
-   },
-   "안면거상": {
-    "r": null,
-    "s": "beyond"
-   },
-   "미니거상": {
-    "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "실리프팅": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "민트실리프팅": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
-   "중안면리프팅": {
+   "안면거상": {
     "r": null,
-    "s": "beyond"
-   },
-   "심부볼리프팅": {
-    "r": null,
-    "s": "beyond"
-   },
-   "턱선리프팅": {
-    "r": null,
-    "s": "beyond"
-   },
-   "팔자리프팅": {
-    "r": null,
-    "s": "beyond"
-   },
-   "마리오네트리프팅": {
-    "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "이마거상": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "미니거상": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "거상": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "코성형": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "코수술": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "콧볼축소": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "매부리코": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
+   },
+   "코재수술": {
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "중년눈성형": {
     "r": null,
-    "s": "beyond"
-   },
-   "눈꺼풀처짐": {
-    "r": null,
-    "s": "beyond"
-   },
-   "눈밑처짐": {
-    "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "중년성형": {
     "r": null,
-    "s": "beyond"
-   },
-   "남자성형": {
-    "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "남자눈성형": {
     "r": null,
-    "s": "beyond"
-   },
-   "남자쌍꺼풀": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자눈매교정": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자코성형": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자복코": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자자연유착": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자절개쌍꺼풀": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자무쌍": {
-    "r": null,
-    "s": "beyond"
-   },
-   "남자안면거상": {
-    "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    }
   }
  }

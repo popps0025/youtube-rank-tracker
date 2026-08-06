@@ -3,24 +3,29 @@
  "records": {
   "2026-08-06": {
    "자연유착": {
-    "r": 30,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "12홀자연유착": {
-    "r": 1,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "12홀": {
-    "r": 29,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "절개법": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "매몰법": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "세미아웃": {
     "r": null,
@@ -28,44 +33,54 @@
     "err": "HTTP 429"
    },
    "세미아웃라인": {
-    "r": 8,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "인아웃": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "인아웃라인": {
-    "r": 22,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "인라인": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "아웃라인": {
-    "r": 38,
-    "s": "ok"
+    "r": null,
+    "s": "error",
+    "err": "HTTP 429"
    },
    "앞트임": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "뒤트임": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "밑트임": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "위트임": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "눈수술": {
     "r": null,
-    "s": "beyond"
+    "s": "error",
+    "err": "HTTP 429"
    },
    "눈성형": {
     "r": null,

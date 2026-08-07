@@ -1,213 +1,196 @@
 # -*- coding: utf-8 -*-
-"""대시보드 생성기: 분석 결과 -> 자체 완결형 HTML 파일."""
+"""대시보드 생성기: 이력 + 상위영상 데이터 -> 2탭 자체완결형 HTML.
+탭1 수치 대시보드(날짜별 보기/전체 추이), 탭2 콘텐츠 추천."""
 import json
 
 TEMPLATE = r"""<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__TITLE__</title>
+<title>팝성형외과 유튜브 상위노출 대시보드</title>
 <style>
-:root{--bg:#0f1720;--panel:#161f2b;--panel2:#1c2836;--line:#26333f;--ink:#e8eef5;
---muted:#93a4b5;--faint:#6b7d8f;--beyond:#3b4b5c;--err:#e5484d;--ok:#30a46c;--empty:#232e3a;
---warn:#f5a623;--good:#30a46c;--bad:#e5484d;--accent:#4c8dff;--up:#30a46c;--down:#e5484d;}
+:root{--bg:#0f1720;--panel:#161f2b;--p2:#1c2836;--line:#26333f;--ink:#e8eef5;--mut:#93a4b5;--faint:#6b7d8f;
+--ok:#30a46c;--beyond:#3b4b5c;--err:#e5484d;--warn:#f5a623;--accent:#4c8dff;--gold:#e5b53b;--up:#30a46c;--down:#e5484d;}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,
-"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;line-height:1.5}
-.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
-h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--muted);font-size:13px;margin-bottom:22px}
-.ok-banner{background:linear-gradient(135deg,#0f2c1f,#10241a);border:1px solid #1f4d38;
-border-radius:14px;padding:16px 20px;margin-bottom:24px}
-.ok-banner .t{font-weight:700;color:#7ee2b0;display:flex;align-items:center;gap:8px;font-size:15px}
-.ok-banner p{margin:7px 0 0;color:#b8d8c8;font-size:13px}
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
-.kpi .lab{font-size:11.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
-.kpi .val{font-size:22px;font-weight:700;letter-spacing:-.5px}
-.kpi .val.sm{font-size:15px}
-.kpi .note{font-size:11px;color:var(--faint);margin-top:3px}
-.kpi.good .val{color:var(--good)}.kpi.warn .val{color:var(--warn)}.kpi.bad .val{color:var(--bad)}
-section{margin-bottom:34px}
-h2{font-size:15px;margin:0 0 4px}
-.snote{color:var(--muted);font-size:12.5px;margin:0 0 16px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:12px}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
-.movers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.mv h3{font-size:13px;margin:0 0 10px}
-.mvrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e2a36;font-size:13px}
-.mvrow:last-child{border-bottom:0}
-.mvd{font-weight:700}.mvd.up{color:var(--up)}.mvd.down{color:var(--down)}
-.empty-note{color:var(--faint);font-size:12.5px;padding:8px 0}
-/* trend chart */
-.trendrow{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:12px;color:var(--muted)}
-.trendrow .nm{width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.trendrow svg{flex:1;background:var(--panel2);border-radius:5px}
-.trendrow .cur{width:60px;text-align:right;font-weight:700;color:var(--ok)}
-/* heatmap */
-.heatwrap{overflow-x:auto}
-.heat{border-collapse:collapse}
-.heat .kw{font-size:11px;color:var(--muted);text-align:right;padding-right:8px;white-space:nowrap;
-position:sticky;left:0;background:var(--panel)}
-.cell{width:15px;height:15px;border:1px solid var(--bg)}
-.cell.ok{background:var(--ok)}.cell.beyond{background:var(--beyond)}.cell.error{background:var(--err)}.cell.none{background:var(--empty)}
-.heat .dc{font-size:9px;color:var(--faint);height:50px;vertical-align:bottom;padding-bottom:4px}
-.heat .dc div{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;margin:0 auto}
-table.kt{width:100%;border-collapse:collapse;font-size:12.5px}
-table.kt th{text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
-table.kt th:hover{color:var(--ink)}
-table.kt td{padding:7px 10px;border-bottom:1px solid #1e2a36}
-table.kt tr:hover td{background:var(--panel2)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:21px;margin:0 0 3px}
+.sub{color:var(--mut);font-size:12.5px;margin-bottom:18px}
+.tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+.tab{padding:11px 18px;font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--ink);border-bottom-color:var(--accent)}
+.view{display:none} .view.on{display:block}
+.subtabs{display:flex;gap:6px;margin-bottom:16px}
+.stab{padding:6px 13px;font-size:12.5px;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--mut);cursor:pointer}
+.stab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px}
+.kpi .l{font-size:11px;color:var(--mut);font-weight:600;margin-bottom:5px}
+.kpi .v{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.kpi .v.sm{font-size:13.5px} .kpi .n{font-size:10.5px;color:var(--faint);margin-top:2px}
+.kpi.good .v{color:var(--ok)} .kpi.warn .v{color:var(--warn)} .kpi.bad .v{color:var(--err)}
+h2{font-size:15px;margin:26px 0 4px} .note{color:var(--mut);font-size:12.5px;margin:0 0 14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.dcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;cursor:pointer;transition:.15s}
+.dcard:hover{border-color:var(--accent);background:var(--p2)}
+.dcard .d{font-size:15px;font-weight:700;margin-bottom:8px}
+.dcard .row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut);padding:2px 0}
+.dcard .row b{color:var(--ink)} .dcard .go{color:var(--accent);font-size:11.5px;margin-top:8px}
+.back{color:var(--accent);cursor:pointer;font-size:13px;margin-bottom:12px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--mut);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid #1e2a36} tr:hover td{background:var(--p2)}
 .num{text-align:right;font-variant-numeric:tabular-nums}
-.tag{font-size:10.5px;padding:2px 7px;border-radius:5px;font-weight:600}
-.tag.ok{background:#123726;color:#7ee2b0}.tag.beyond{background:#2a3542;color:#93a4b5}
-.tag.error{background:#4a1d21;color:#ff9ea1}.tag.nodata{background:#20272f;color:#6b7d8f}
-.d-up{color:var(--up);font-weight:700}.d-down{color:var(--down);font-weight:700}.d-flat{color:var(--faint)}
-.foot{color:var(--faint);font-size:11.5px;margin-top:30px;text-align:center}
-@media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.movers{grid-template-columns:1fr}}
-@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600}
+.tag.ok{background:#123726;color:#7ee2b0}.tag.beyond{background:#2a3542;color:#93a4b5}.tag.err{background:#4a1d21;color:#ff9ea1}.tag.off{background:#3a2a10;color:#f5c977}
+.rankbig{font-weight:700}.rankbig.g{color:var(--gold)}.rankbig.k{color:var(--ok)}
+.tier{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px;margin-bottom:12px;border-left:4px solid var(--line)}
+.tier.t1{border-left-color:var(--gold)}.tier.t2{border-left-color:var(--ok)}.tier.t3{border-left-color:var(--accent)}.tier.t4{border-left-color:var(--faint)}.tier.risk{border-left-color:var(--err)}
+.tier h3{margin:0 0 4px;font-size:14px}.tier .desc{font-size:12.5px;color:var(--mut);margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:16px;background:var(--p2);border:1px solid var(--line)}
+.chip b{color:var(--gold)}
+.act{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+.act .rn{width:24px;height:24px;border-radius:7px;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.act .at{font-size:13.5px;font-weight:700;margin-bottom:2px}.act .ad{font-size:12.5px;color:var(--mut)}
+.ideacard{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:10px}
+.ideacard .kw{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ideacard ul{margin:0;padding-left:18px}.ideacard li{font-size:12.5px;color:var(--ink);margin:4px 0}
+.compkw{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:10px}
+.compkw .h{font-size:13.5px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.vid{display:flex;gap:9px;padding:6px 0;border-top:1px solid #1e2a36;font-size:12px}
+.vid:first-of-type{border-top:0}
+.vid .n{color:var(--faint);width:16px;flex-shrink:0}
+.vid .tt{flex:1}.vid .cc{color:var(--mut);font-size:11px}
+.vid.mine .tt{color:#7ee2b0;font-weight:600}
+.pat{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pat .p{font-size:11px;padding:3px 9px;border-radius:14px;background:#13233a;border:1px solid #24425f;color:#9ec5ff}
+.foot{color:var(--faint);font-size:11.5px;margin-top:28px;text-align:center}
+@media(max-width:820px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.kpis{grid-template-columns:repeat(2,1fr)}}
 </style></head><body><div class="wrap">
-<h1>__TITLE__</h1>
-<div class="sub">타깃 채널: <b id="ch"></b> · 최신 수집일 <b id="ld"></b> · 추적 키워드 <b id="nk"></b>개 · 생성 <span id="gen"></span></div>
-
-<div class="ok-banner">
-  <div class="t">✅ 자체 수집 파이프라인 — 데이터 품질 자동 점검</div>
-  <p id="qtext"></p>
+<h1>팝성형외과 유튜브 상위노출 대시보드</h1>
+<div class="sub">채널 <b id="ch"></b> · 최신 수집일 <b id="ld"></b> · 추적 키워드 <b id="nk"></b>개 · 생성 <span id="gen"></span></div>
+<div class="tabs">
+  <div class="tab on" data-v="numbers">📊 수치 대시보드</div>
+  <div class="tab" data-v="content">💡 콘텐츠 추천</div>
 </div>
-
-<div class="kpis" id="kpis"></div>
-
-<section>
-  <h2>순위 추이 <span style="font-weight:400;color:var(--muted);font-size:12px">(TOP50 안에 잡힌 키워드)</span></h2>
-  <p class="snote">아래로 갈수록 순위가 낮아집니다(위쪽=상위). 실제 순위가 한 번이라도 잡힌 키워드만 표시됩니다.</p>
-  <div class="panel" id="trendpanel"></div>
-</section>
-
-<section>
-  <h2>순위 변동 — 급상승 / 급하락 <span style="font-weight:400;color:var(--muted);font-size:12px">(직전 실측 대비)</span></h2>
-  <div class="panel"><div class="movers">
-    <div class="mv"><h3 style="color:var(--up)">▲ 급상승</h3><div id="gainers"></div></div>
-    <div class="mv"><h3 style="color:var(--down)">▼ 급하락</h3><div id="losers"></div></div>
-  </div></div>
-</section>
-
-<section>
-  <h2>키워드 × 날짜 상태 히트맵</h2>
-  <p class="snote">전체 추적 기간의 수집 상태입니다. 초록=TOP50 진입, 회색=50위 밖, 빨강=수집 오류.</p>
-  <div class="panel">
-    <div class="legend">
-      <span><i class="sw" style="background:var(--ok)"></i> TOP50 진입</span>
-      <span><i class="sw" style="background:var(--beyond)"></i> 50위 밖</span>
-      <span><i class="sw" style="background:var(--err)"></i> 수집 오류</span>
-      <span><i class="sw" style="background:var(--empty)"></i> 데이터 없음</span>
+<div class="view on" id="view-numbers">
+  <div class="subtabs">
+    <div class="stab on" data-s="dates">📅 날짜별 보기</div>
+    <div class="stab" data-s="trend">📈 전체 추이</div>
+  </div>
+  <div id="num-dates">
+    <p class="note">추적 중인 날짜입니다. 카드를 클릭하면 그 날짜의 키워드별 순위 상세로 이동합니다. (매일 오전 9시 자동으로 새 날짜가 추가돼요.)</p>
+    <div class="dgrid" id="dgrid"></div>
+  </div>
+  <div id="num-detail" style="display:none">
+    <span class="back" id="backBtn">← 날짜 목록으로</span>
+    <h2 id="detailDate" style="margin-top:0"></h2>
+    <div class="kpis" id="detailKpis"></div>
+    <div class="panel" style="padding:6px 10px">
+      <table id="detailTable"><thead><tr>
+        <th data-k="kw">키워드</th><th data-k="rank" class="num">순위</th><th data-k="st">상태</th>
+      </tr></thead><tbody></tbody></table>
     </div>
-    <div class="heatwrap"><table class="heat" id="heat"></table></div>
   </div>
-</section>
-
-<section>
-  <h2>키워드별 상태 <span style="font-weight:400;color:var(--muted);font-size:12px">(헤더 클릭 정렬)</span></h2>
-  <div class="panel" style="padding:6px 10px">
-    <table class="kt" id="kt"><thead><tr>
-      <th data-k="kw">키워드</th><th data-k="latest" class="num">현재순위</th>
-      <th data-k="delta" class="num">변동</th><th data-k="best" class="num">최고순위</th>
-      <th data-k="ok_days" class="num">진입일수</th><th data-k="err_days" class="num">오류일수</th>
-      <th data-k="st">상태</th>
-    </tr></thead><tbody></tbody></table>
+  <div id="num-trend" style="display:none">
+    <p class="note">전체 추적 기간의 TOP50 진입 키워드 수 추이입니다.</p>
+    <div class="panel"><canvas id="trendCanvas" width="1040" height="180" style="width:100%;height:180px"></canvas></div>
+    <h2>키워드 × 날짜 순위 히트맵</h2>
+    <div class="panel"><div style="overflow-x:auto"><table id="heat" style="border-collapse:collapse"></table></div></div>
   </div>
-</section>
-
-<div class="foot">자체 수집 파이프라인이 매일 자동 생성합니다. 데이터 원천: YouTube Data API · 누적 이력 __NDATES__일치.</div>
+</div>
+<div class="view" id="view-content">
+  <div class="kpis" id="cKpis"></div>
+  <h2>🎯 이번주 우선 액션</h2>
+  <p class="note">오늘 데이터 기준으로 가장 효과가 클 것으로 보이는 순서입니다.</p>
+  <div id="actions"></div>
+  <h2>📊 기회 · 위험 분석</h2>
+  <div id="oppRisk"></div>
+  <h2>✍️ 키워드별 콘텐츠 아이디어</h2>
+  <p class="note">순위 구간별로 우선순위가 높은 키워드부터, 영상 제목·기획 각도 예시를 제안합니다.</p>
+  <div id="ideas"></div>
+  <h2>🏥 타병원 상위 콘텐츠 분석</h2>
+  <p class="note">각 키워드에서 현재 상위에 노출되는 영상들입니다. 경쟁 병원이 어떤 각도·형식으로 콘텐츠를 만드는지 참고하세요. (초록색 = 우리 채널)</p>
+  <div id="comp"></div>
+</div>
+<div class="foot">데이터: YouTube Data API · 매일 오전 9시(KST) 자동 갱신 · 콘텐츠 추천은 순위 데이터 기반으로 자동 생성됩니다.</div>
 </div>
 <script id="p" type="application/json">__DATA__</script>
 <script>
-const A=JSON.parse(document.getElementById('p').textContent);
-const G=A._generated||'';
-document.getElementById('ch').textContent=A.channel;
-document.getElementById('ld').textContent=A.latest_date||'—';
-document.getElementById('nk').textContent=A.n_keywords;
-document.getElementById('gen').textContent=G;
-
-const q=A.quality, s=A.summary;
-document.getElementById('qtext').innerHTML=
- `날짜 컬럼 중복 <b>${q.dup_dates.length===0?'없음 ✅':(q.dup_dates.length+'건 ⚠️')}</b> · `+
- `최신일 수집 성공률 <b>${q.success_rate}%</b> · 오늘 오류 <b>${q.today_errors}건</b> · 누락 <b>${q.today_missing}건</b>. `+
- `키워드 중복 없이 정규화된 이력에서 자동 계산됩니다.`;
-
-const kpis=[
- {lab:'추적 키워드',val:A.n_keywords+'개',note:'중복 제거됨'},
- {lab:'최신 수집일',val:(A.latest_date||'—').slice(5),note:A.dates.length+'일 누적',sm:true},
- {lab:'TOP50 진입',val:s.top50_count+'개',note:'최신일 기준',cls:s.top50_count>0?'good':''},
- {lab:'수집 성공률',val:q.success_rate+'%',note:'오류 제외',cls:q.success_rate>=95?'good':'warn'},
- {lab:'오늘 오류',val:q.today_errors+'건',note:q.today_errors===0?'정상':'확인 필요',cls:q.today_errors===0?'good':'bad'},
- {lab:'날짜 중복',val:q.dup_dates.length===0?'0건':q.dup_dates.length+'건',note:'품질 점검',cls:q.dup_dates.length===0?'good':'bad'},
-];
-document.getElementById('kpis').innerHTML=kpis.map(k=>
- `<div class="kpi ${k.cls||''}"><div class="lab">${k.lab}</div><div class="val ${k.sm?'sm':''}">${k.val}</div><div class="note">${k.note}</div></div>`).join('');
-
-// trend chart
-const top_n=A.top_n;
-function trend(series){
- const n=series.length,w=200,h=30,pad=3;
- const pts=series.map((v,i)=>v==null?null:[pad+i/(n-1)*(w-2*pad), pad+(v-1)/(top_n-1)*(h-2*pad)]);
- let path='',started=false,dots='';
- pts.forEach(p=>{if(p){path+=(started?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)+' ';started=true;dots+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="1.7" fill="#30a46c"/>`;}});
- return `<svg viewBox="0 0 ${w} ${h}" height="30" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="#30a46c" stroke-width="1.5"/>${dots}</svg>`;
-}
-const trended=A.per_kw.filter(k=>k.series.some(v=>v!=null)).sort((a,b)=>(a.best||99)-(b.best||99));
-document.getElementById('trendpanel').innerHTML = trended.length? trended.map(k=>
- `<div class="trendrow"><span class="nm" title="${k.kw}">${k.kw}</span>${trend(k.series)}<span class="cur">${k.latest!=null?k.latest+'위':'50+'}</span></div>`
-).join('') : '<div class="empty-note">아직 TOP50 안에 잡힌 키워드가 없습니다. 수집이 쌓이면 여기에 순위 추이가 표시됩니다.</div>';
-
-// movers
-function moverRows(arr,dir){
- if(!arr.length) return '<div class="empty-note">해당 없음</div>';
- return arr.map(k=>`<div class="mvrow"><span>${k.kw} <span style="color:var(--faint)">${k.prev}위→${k.latest}위</span></span><span class="mvd ${dir}">${dir==='up'?'▲':'▼'} ${Math.abs(k.delta)}</span></div>`).join('');
-}
-document.getElementById('gainers').innerHTML=moverRows(A.gainers,'up');
-document.getElementById('losers').innerHTML=moverRows(A.losers,'down');
-
-// heatmap
-const dates=A.dates;
-let hh='<tr><th class="kw"></th>'+dates.map(d=>`<th class="dc"><div>${d.slice(5)}</div></th>`).join('')+'</tr>';
-A.per_kw.forEach(k=>{
- hh+=`<tr><td class="kw">${k.kw}</td>`+k.status_series.map((st,i)=>{
-   const lab=st==='ok'?(k.series[i]+'위'):st==='beyond'?'50위 밖':st==='error'?'수집 오류':'데이터 없음';
-   return `<td class="cell ${st}" title="${k.kw} · ${dates[i]} · ${lab}"></td>`;
- }).join('')+'</tr>';
+const P=JSON.parse(document.getElementById('p').textContent);
+const KW=P.keywords, H=P.history, DATES=P.dates, COMP=P.comp, OFF=new Set(P.offtopic);
+const latest=DATES[DATES.length-1];
+document.getElementById('ch').textContent=P.channel;
+document.getElementById('ld').textContent=latest||'—';
+document.getElementById('nk').textContent=KW.length;
+document.getElementById('gen').textContent=P.generated;
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+t.dataset.v).classList.add('on');
 });
-document.getElementById('heat').innerHTML=hh;
-
-// keyword table
-const pk=A.per_kw.map(x=>({...x,
-  _latest:x.latest==null?999:x.latest,_best:x.best==null?999:x.best,_delta:x.delta==null?-999:x.delta,
-  st:x.latest_status}));
-let sk='_latest',sd=1;
-function stTag(st){return st==='ok'?'<span class="tag ok">진입</span>':st==='beyond'?'<span class="tag beyond">50+</span>':st==='error'?'<span class="tag error">오류</span>':'<span class="tag nodata">무데이터</span>';}
-function dlt(d){if(d==null)return '<span class="d-flat">—</span>';if(d>0)return `<span class="d-up">▲${d}</span>`;if(d<0)return `<span class="d-down">▼${-d}</span>`;return '<span class="d-flat">0</span>';}
-function render(){
- pk.sort((a,b)=>{let k=sk;if(k==='kw'||k==='st')return sd*(''+a[k]).localeCompare(''+b[k],'ko');
-   let av=k==='latest'?a._latest:k==='best'?a._best:k==='delta'?a._delta:a[k];
-   let bv=k==='latest'?b._latest:k==='best'?b._best:k==='delta'?b._delta:b[k];return sd*(av-bv);});
- document.querySelector('#kt tbody').innerHTML=pk.map(x=>
-  `<tr><td>${x.kw}</td><td class="num">${x.latest!=null?x.latest+'위':'—'}</td>`+
-  `<td class="num">${dlt(x.delta)}</td><td class="num">${x.best!=null?x.best+'위':'—'}</td>`+
-  `<td class="num">${x.ok_days}</td><td class="num">${x.err_days}</td><td>${stTag(x.st)}</td></tr>`).join('');
-}
-document.querySelectorAll('#kt th').forEach(th=>th.addEventListener('click',()=>{
- const k=th.dataset.k;if(k===sk)sd*=-1;else{sk=(k==='latest')?'latest':(k==='best')?'best':(k==='delta')?'delta':k;sd=(k==='kw')?1:(k==='best'||k==='latest')?1:-1;}render();}));
-render();
+document.querySelectorAll('.stab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.stab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  document.getElementById('num-dates').style.display='none';
+  document.getElementById('num-detail').style.display='none';
+  document.getElementById('num-trend').style.display='none';
+  if(t.dataset.s==='dates') document.getElementById('num-dates').style.display='block';
+  else { document.getElementById('num-trend').style.display='block'; drawTrend(); }
+});
+function dayStats(date){const d=H[date]||{};let ok=0,beyond=0,err=0,sum=0;for(const kw of KW){const v=d[kw];if(!v)continue;if(v.s==='ok'){ok++;sum+=v.r;}else if(v.s==='beyond')beyond++;else if(v.s==='error')err++;}return {ok,beyond,err,avg:ok?Math.round(sum/ok):null};}
+document.getElementById('dgrid').innerHTML=DATES.slice().reverse().map(dt=>{const s=dayStats(dt);return `<div class="dcard" data-d="${dt}"><div class="d">${dt}${dt===latest?' <span class="tag ok">최신</span>':''}</div><div class="row"><span>TOP50 진입</span><b>${s.ok}개</b></div><div class="row"><span>평균 순위</span><b>${s.avg?s.avg+'위':'—'}</b></div><div class="row"><span>50위 밖</span><b>${s.beyond}개</b></div><div class="row"><span>수집 오류</span><b>${s.err}개</b></div><div class="go">상세 보기 →</div></div>`;}).join('');
+document.querySelectorAll('.dcard').forEach(c=>c.onclick=()=>showDetail(c.dataset.d));
+let dSort='rank',dDir=1;
+function showDetail(dt){document.getElementById('num-dates').style.display='none';document.getElementById('num-detail').style.display='block';document.getElementById('detailDate').textContent=dt+' 순위 상세';const s=dayStats(dt);document.getElementById('detailKpis').innerHTML=[{l:'TOP50 진입',v:s.ok+'개',c:s.ok?'good':''},{l:'평균 순위',v:s.avg?s.avg+'위':'—'},{l:'50위 밖',v:s.beyond+'개'},{l:'수집 오류',v:s.err+'개',c:s.err?'bad':'good'},{l:'최고 순위',v:(()=>{const rs=KW.map(k=>H[dt][k]).filter(v=>v&&v.s==='ok').map(v=>v.r);return rs.length?Math.min(...rs)+'위':'—';})(),c:'good'}].map(k=>`<div class="kpi ${k.c||''}"><div class="l">${k.l}</div><div class="v">${k.v}</div></div>`).join('');renderDetail(dt);}
+function renderDetail(dt){const d=H[dt];let rows=KW.map(kw=>({kw,r:(d[kw]&&d[kw].s==='ok')?d[kw].r:null,s:d[kw]?d[kw].s:'nodata',off:OFF.has(kw)}));rows.sort((a,b)=>{if(dSort==='kw')return dDir*a.kw.localeCompare(b.kw,'ko');if(dSort==='st')return dDir*(''+a.s).localeCompare(''+b.s);return dDir*((a.r===null?999:a.r)-(b.r===null?999:b.r));});document.querySelector('#detailTable tbody').innerHTML=rows.map(x=>{const rk=x.r!==null?`<span class="rankbig ${x.r<=10?'g':'k'}">${x.r}위</span>`:'—';const st=x.s==='ok'?'<span class="tag ok">진입</span>':x.s==='beyond'?'<span class="tag beyond">50위 밖</span>':x.s==='error'?'<span class="tag err">오류</span>':'<span class="tag beyond">-</span>';const off=x.off?' <span class="tag off">의도불일치</span>':'';return `<tr><td>${x.kw}${off}</td><td class="num">${rk}</td><td>${st}</td></tr>`;}).join('');}
+document.querySelectorAll('#detailTable th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k===dSort)dDir*=-1;else{dSort=k;dDir=1;}renderDetail(document.getElementById('detailDate').textContent.split(' ')[0]);});
+document.getElementById('backBtn').onclick=()=>{document.getElementById('num-detail').style.display='none';document.getElementById('num-dates').style.display='block';};
+function drawTrend(){const cv=document.getElementById('trendCanvas'),ctx=cv.getContext('2d');const W=cv.width,Hh=cv.height,pad=30;ctx.clearRect(0,0,W,Hh);const vals=DATES.map(d=>dayStats(d).ok);const mx=Math.max(5,...vals);ctx.strokeStyle='#26333f';ctx.beginPath();ctx.moveTo(pad,Hh-pad);ctx.lineTo(W-10,Hh-pad);ctx.stroke();const n=DATES.length;ctx.strokeStyle='#30a46c';ctx.lineWidth=2;ctx.beginPath();DATES.forEach((d,i)=>{const x=n>1?pad+i/(n-1)*(W-pad-15):W/2;const y=Hh-pad-(vals[i]/mx)*(Hh-2*pad);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();DATES.forEach((d,i)=>{const x=n>1?pad+i/(n-1)*(W-pad-15):W/2;const y=Hh-pad-(vals[i]/mx)*(Hh-2*pad);ctx.fillStyle='#30a46c';ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fill();ctx.fillStyle='#93a4b5';ctx.font='11px sans-serif';ctx.fillText(vals[i],x-4,y-8);ctx.fillText(d.slice(5),x-14,Hh-pad+15);});let hh='<tr><th style="font-size:10px;padding:2px 6px"></th>'+DATES.map(d=>`<th style="font-size:9px;color:#6b7d8f;font-weight:400;padding:2px">${d.slice(5)}</th>`).join('')+'</tr>';KW.forEach(kw=>{hh+=`<tr><td style="font-size:10px;color:#93a4b5;padding:1px 6px;white-space:nowrap;text-align:right">${kw}</td>`+DATES.map(d=>{const v=H[d][kw];let bg=v&&v.s==='ok'?'#30a46c':v&&v.s==='beyond'?'#3b4b5c':v&&v.s==='error'?'#e5484d':'#232e3a';const tt=v&&v.s==='ok'?v.r+'위':v?v.s:'-';return `<td title="${kw} ${d} ${tt}" style="width:16px;height:15px;background:${bg};border:1px solid #0f1720"></td>`;}).join('')+'</tr>';});document.getElementById('heat').innerHTML=hh;}
+// content tab
+const d=H[latest]||{};
+const rankOf=kw=>(d[kw]&&d[kw].s==='ok')?d[kw].r:null;
+const tier=kw=>{const r=rankOf(kw);if(r===null)return 4;if(r<=10)return 1;if(r<=30)return 2;return 3;};
+const inTop=KW.filter(k=>rankOf(k)!==null);
+document.getElementById('cKpis').innerHTML=[{l:'TOP50 진입',v:inTop.length+'개',c:'good'},{l:'TOP10 진입',v:KW.filter(k=>{const r=rankOf(k);return r&&r<=10;}).length+'개',c:'good'},{l:'진입 임박(11-30)',v:KW.filter(k=>{const r=rankOf(k);return r&&r>10&&r<=30;}).length+'개',c:'warn'},{l:'의도 불일치',v:OFF.size+'개',c:'bad'},{l:'신규 공략 필요',v:KW.filter(k=>rankOf(k)===null&&!OFF.has(k)).length+'개'}].map(k=>`<div class="kpi ${k.c||''}"><div class="l">${k.l}</div><div class="v">${k.v}</div></div>`).join('');
+const acts=[];
+KW.filter(k=>{const r=rankOf(k);return r&&r>10&&r<=20;}).sort((a,b)=>rankOf(a)-rankOf(b)).forEach(k=>acts.push({t:`「${k}」 ${rankOf(k)}위 → TOP10 집중 공략`,d:`상위 10위 진입이 눈앞입니다. 이 키워드 전용 콘텐츠를 이번주 1~2편 추가 발행하고, 기존 상위 영상 제목·썸네일을 키워드가 앞에 오도록 최적화하세요.`}));
+KW.filter(k=>{const r=rankOf(k);return r&&r<=10;}).sort((a,b)=>rankOf(a)-rankOf(b)).forEach(k=>acts.push({t:`「${k}」 ${rankOf(k)}위 사수 + 롱테일 확장`,d:`이미 상위권입니다. "${k}" 세부 주제(후기·회복·비용 등)로 시리즈를 만들어 상위권을 굳히고 연관 검색을 흡수하세요.`}));
+if(OFF.size)acts.push({t:`의도 불일치 키워드 재검토 (${[...OFF].join(', ')})`,d:`이 키워드들은 성형이 아닌 게임·스포츠 등 다른 콘텐츠가 상위를 차지합니다. 순위가 잡혀도 잠재고객 유입과 무관하니 구체적 조합 키워드로 대체를 권장합니다.`});
+const near50=KW.filter(k=>{const r=rankOf(k);return r&&r>40&&r<=50;});
+if(near50.length)acts.push({t:`50위 경계 키워드 유지 발행 (${near50.join(', ')})`,d:`턱걸이로 진입한 키워드입니다. 발행이 뜸하면 밀려나니 2~3주 간격으로 관련 영상을 꾸준히 올려 순위를 지키세요.`});
+document.getElementById('actions').innerHTML=acts.slice(0,6).map((a,i)=>`<div class="act"><div class="rn">${i+1}</div><div><div class="at">${a.t}</div><div class="ad">${a.d}</div></div></div>`).join('')||'<div class="note">데이터가 더 쌓이면 우선 액션이 표시됩니다.</div>';
+function tierList(t){return KW.filter(k=>tier(k)===t&&!(t===3&&OFF.has(k))).sort((a,b)=>(rankOf(a)??999)-(rankOf(b)??999));}
+const oppHtml=[{cls:'t1',h:'🏆 상위권 (1-10위) — 사수 & 확장',dsc:'이미 상위 노출 중. 롱테일·시리즈로 방어하고 연관 검색을 흡수하세요.',ks:tierList(1)},{cls:'t2',h:'🚀 기회 (11-30위) — 조금만 더',dsc:'상위권 진입이 가시권입니다. 집중 발행 + 제목/썸네일 최적화가 효과적입니다.',ks:tierList(2)},{cls:'t3',h:'🌱 진입 임박 (31-50위)',dsc:'노출이 시작된 단계. 꾸준한 발행으로 순위 상승을 유도하세요.',ks:tierList(3)}].map(o=>`<div class="tier ${o.cls}"><h3>${o.h}</h3><div class="desc">${o.dsc}</div><div class="chips">${o.ks.length?o.ks.map(k=>`<span class="chip">${k} <b>${rankOf(k)}위</b></span>`).join(''):'<span class="note">해당 없음</span>'}</div></div>`).join('');
+const gap=KW.filter(k=>rankOf(k)===null&&!OFF.has(k));
+const riskHtml=`<div class="tier risk"><h3>⚠️ 위험 · 재검토 — 의도 불일치</h3><div class="desc">아래 키워드는 성형이 아닌 다른 분야(게임·골프·스케이트 등) 영상이 상위를 차지합니다. 순위가 잡혀도 고객 유입과 무관하니 구체적 조합 키워드로 대체를 권장합니다.</div><div class="chips">${[...OFF].map(k=>`<span class="chip" style="border-color:#5b2327;color:#ffd0d2">${k}</span>`).join('')||'<span class="note">없음</span>'}</div></div><div class="tier t4"><h3>🎯 신규 공략 (50위 밖) — 콘텐츠 부족</h3><div class="desc">아직 노출되지 않는 키워드입니다. 아래 "키워드별 콘텐츠 아이디어"를 참고해 신규 콘텐츠를 제작하세요.</div><div class="chips">${gap.map(k=>`<span class="chip">${k}</span>`).join('')||'<span class="note">없음</span>'}</div></div>`;
+document.getElementById('oppRisk').innerHTML=oppHtml+riskHtml;
+const IDEAS=[kw=>`「${kw}」 전후 사진 + 실제 회복 과정 (수술직후~1개월 경과)`,kw=>`「${kw}」 부작용·오해, 성형외과 전문의가 팩트체크`,kw=>`「${kw}」 vs 다른 방법 비교 — 나에게 맞는지 자가진단 체크리스트`,kw=>`「${kw}」 비용·수술시간·회복기간 1분 총정리 Q&A`,kw=>`「${kw}」 이런 분께 추천 / 이런 분은 비추천 케이스`,kw=>`「${kw}」 실제 후기 인터뷰 (환자가 말하는 솔직 경험)`,kw=>`「${kw}」 자주 묻는 질문 TOP5 — 상담 전 꼭 보세요 #shorts`];
+function ideasFor(kw,seed){const out=[];for(let i=0;i<3;i++)out.push(IDEAS[(seed+i*2)%IDEAS.length](kw));return out;}
+const tierLabel={1:'🏆 상위권',2:'🚀 기회',3:'🌱 진입임박',4:'🎯 신규공략'};
+const ideaKws=[...tierList(2),...tierList(3),...KW.filter(k=>tier(k)===4&&!OFF.has(k)),...tierList(1)];
+document.getElementById('ideas').innerHTML=ideaKws.map((kw,idx)=>{const r=rankOf(kw);const t=tier(kw);return `<div class="ideacard"><div class="kw">${kw} <span class="tag ${r?'ok':'beyond'}">${r?r+'위':'미진입'}</span> <span style="font-size:11px;color:var(--faint)">${tierLabel[t]}</span></div><ul>${ideasFor(kw,idx).map(x=>`<li>${x}</li>`).join('')}</ul></div>`;}).join('');
+const PATTERNS=[{re:/vs|VS|비교|차이/,label:'비교(VS)'},{re:/총정리|정리|모든것/,label:'총정리'},{re:/자가진단|진단|체크|나에게|내 눈|내눈/,label:'자가진단'},{re:/부작용|오해|사기|진실|하지마|후회|실패/,label:'부작용·오해'},{re:/Q&A|QnA|질문|묻는/i,label:'Q&A'},{re:/후기|경과|전후|리뷰/,label:'후기·전후'},{re:/shorts|쇼츠/i,label:'쇼츠'},{re:/추천|비추천|이런분/,label:'추천/비추천'}];
+const compKws=KW.filter(k=>COMP[k]&&COMP[k].length);
+document.getElementById('comp').innerHTML=compKws.map(kw=>{const vids=COMP[kw];const r=rankOf(kw);const patt={};vids.forEach(v=>PATTERNS.forEach(p=>{if(p.re.test(v.t))patt[p.label]=1;}));const off=OFF.has(kw);return `<div class="compkw"><div class="h">${kw} <span class="tag ${r?'ok':'beyond'}">${r?'우리 '+r+'위':'우리 미진입'}</span>${off?' <span class="tag off">의도불일치</span>':''}</div>`+vids.map((v,i)=>`<div class="vid ${v.mine?'mine':''}"><span class="n">${i+1}</span><div><div class="tt">${(v.t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}${v.mine?' ✅':''}</div><div class="cc">${(v.c||'').replace(/</g,'&lt;')}</div></div></div>`).join('')+(Object.keys(patt).length?`<div class="pat">${Object.keys(patt).map(p=>`<span class="p">#${p}</span>`).join('')}</div>`:'')+`</div>`;}).join('')||'<div class="note">상위 영상 데이터가 아직 없습니다. 다음 수집부터 표시됩니다.</div>';
 </script></body></html>"""
 
 
-def render(analysis, out_path, generated=""):
-    a = dict(analysis)
-    a["_generated"] = generated
-    html = (TEMPLATE
-            .replace("__TITLE__", analysis.get("title", "유튜브 상위노출 자동 대시보드"))
-            .replace("__NDATES__", str(len(analysis["dates"])))
-            .replace("__DATA__", json.dumps(a, ensure_ascii=False)))
+def render(cfg, history, comp_data, out_path, generated=""):
+    kws = cfg["keywords"]
+    records = history.get("records", {})
+    dates = sorted(records.keys())
+    payload = {
+        "generated": generated,
+        "channel": cfg.get("dashboard_title", "") and "팝성형외과 (@팝성형외과)",
+        "keywords": kws,
+        "dates": dates,
+        "history": records,
+        "comp": comp_data.get("comp", {}),
+        "offtopic": comp_data.get("offtopic", []),
+    }
+    html = TEMPLATE.replace("__DATA__", json.dumps(payload, ensure_ascii=False))
     with open(out_path, "w") as f:
         f.write(html)
     return out_path

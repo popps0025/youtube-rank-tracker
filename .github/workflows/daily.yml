@@ -1,9 +1,9 @@
 name: daily-rank-track
 
-# 매일 00:00 UTC (한국시간 오전 9시) 자동 실행
+# 매일 01:30 UTC (한국시간 오전 10시 30분) 자동 실행
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "30 1 * * *"
   workflow_dispatch: {}      # 수동 실행 버튼도 제공
 
 permissions:

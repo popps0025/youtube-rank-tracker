@@ -1,31 +1,29 @@
 # -*- coding: utf-8 -*-
-"""전체 파이프라인 실행: 수집 → 이력 누적 → 분석 → 대시보드 생성.
+"""전체 파이프라인: 수집 → 이력 누적 → 상위영상/분석 저장 → 2탭 대시보드 생성.
 
-사용법:
-  python run.py                 # 실제 수집 (환경변수에 API 키 필요)
-  python run.py --mock          # API 키 없이 가짜 데이터로 파이프라인 확인
-  python run.py --date 2026-08-06  # 수집일 지정(기본: 오늘, KST)
-  python run.py --dashboard-only   # 수집 없이 기존 이력으로 대시보드만 재생성
+  python run.py            # 실제 수집 (환경변수 또는 api_key.txt 에 API 키)
+  python run.py --mock     # API 없이 파이프라인 확인
+  python run.py --dashboard-only
 """
-import os, sys, json, argparse, datetime
+import os, sys, json, argparse, datetime, re
 import yaml
 import collect as collector
-import analyze as analyzer
 import dashboard as dash
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 HIST = os.path.join(BASE, "data", "history.json")
+COMP = os.path.join(BASE, "data", "latest_comp.json")
 OUT = os.path.join(BASE, "data", "dashboard.html")
+
+MED = re.compile(r"성형|클리닉|의원|병원|피부|외과")
 
 
 def kst_today():
     return (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).strftime("%Y-%m-%d")
 
 
-def load_history():
-    if os.path.exists(HIST):
-        return json.load(open(HIST))
-    return {"meta": {}, "records": {}}
+def load_json(p, default):
+    return json.load(open(p)) if os.path.exists(p) else default
 
 
 def main():
@@ -36,43 +34,50 @@ def main():
     args = ap.parse_args()
 
     cfg = yaml.safe_load(open(os.path.join(BASE, "config.yaml")))
-    os.makedirs(os.path.join(BASE, "data"), exist_ok=True)  # data 폴더 없으면 생성
-    history = load_history()
+    os.makedirs(os.path.join(BASE, "data"), exist_ok=True)
+    history = load_json(HIST, {"records": {}})
     history.setdefault("records", {})
     date = args.date or kst_today()
 
     if not args.dashboard_only:
         if args.mock:
-            print("• MOCK 수집 (API 미사용)")
+            print("• MOCK 수집")
             result = collector.collect_mock(cfg, history)
         else:
             key = os.environ.get(cfg["api_key_env"], "")
-            # 환경변수가 없으면 프로젝트 폴더의 api_key.txt 를 읽음 (예약/무인 실행 편의)
             if not key:
                 kf = os.path.join(BASE, "api_key.txt")
                 if os.path.exists(kf):
                     key = open(kf).read().strip()
             if not key:
-                sys.exit(f"환경변수 {cfg['api_key_env']} 에 YouTube API 키가 없습니다. "
-                         f"테스트는 `python run.py --mock` 을 쓰세요.")
+                sys.exit(f"{cfg['api_key_env']} (또는 api_key.txt)에 API 키가 없습니다.")
             if not (cfg.get("channel_id") or cfg.get("channel_title_contains")):
-                sys.exit("config.yaml 의 channel_id (또는 channel_title_contains)를 먼저 설정하세요.")
-            print(f"• 실제 수집 시작 — {len(cfg['keywords'])}개 키워드")
+                sys.exit("config.yaml 의 channel_id 를 설정하세요.")
+            print(f"• 실제 수집 — {len(cfg['keywords'])}개 키워드")
             result = collector.collect(cfg, key)
-        primary = cfg.get("segments", ["all"])[0]
-        day = result.get(primary, result.get("all", {}))
+
+        # 이력(순위)에 저장
+        day = {kw: {"r": v.get("r"), "s": v["s"]} for kw, v in result.items()}
         history["records"][date] = day
         json.dump(history, open(HIST, "w"), ensure_ascii=False, indent=1)
+
+        # 상위영상 + 의도불일치 저장 (최신 스냅샷만)
+        comp = {kw: v.get("top", []) for kw, v in result.items() if v.get("top")}
+        offtopic = []
+        for kw, tops in comp.items():
+            if tops and not any(MED.search(t.get("c", "")) for t in tops):
+                offtopic.append(kw)
+        json.dump({"date": date, "comp": comp, "offtopic": offtopic},
+                  open(COMP, "w"), ensure_ascii=False, indent=1)
+
         okc = sum(1 for v in day.values() if v["s"] == "ok")
         erc = sum(1 for v in day.values() if v["s"] == "error")
-        print(f"• {date} 수집 완료: TOP50 진입 {okc} · 오류 {erc} · 저장 → data/history.json")
+        print(f"• {date}: TOP50 {okc} · 오류 {erc} · 상위영상 {len(comp)}개 키워드 · 의도불일치 {offtopic}")
 
-    analysis = analyzer.analyze(history, cfg)
+    comp_data = load_json(COMP, {"comp": {}, "offtopic": []})
     gen = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-    dash.render(analysis, OUT, generated=gen)
+    dash.render(cfg, history, comp_data, OUT, generated=gen)
     print(f"• 대시보드 생성 → {OUT}")
-    print(f"  최신일 {analysis['latest_date']} · 누적 {len(analysis['dates'])}일 · "
-          f"TOP50 {analysis['summary']['top50_count']}개")
 
 
 if __name__ == "__main__":
